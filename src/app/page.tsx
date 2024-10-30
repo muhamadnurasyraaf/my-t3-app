@@ -1,55 +1,68 @@
 import Link from "next/link";
 
-import { LatestPost } from "~/app/_components/post";
 import { getServerAuthSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+
   const session = await getServerAuthSession();
-
-  void api.post.getLatest.prefetch();
-
+  const bankAccount = await api.bankaccount.getBankAccount();
+  const transactions = await api.transaction.getLatest();
   return (
+    
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+            Your <span className="text-[hsl(280,100%,70%)]">Finance</span> Partner
           </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
+        
           <div className="flex flex-col items-center gap-2">
             <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
+             
             </p>
 
             <div className="flex flex-col items-center justify-center gap-4">
               <p className="text-center text-2xl text-white">
                 {session && <span>Logged in as {session.user?.name}</span>}
               </p>
+              <Link
+                href="/bankaccount"
+                className={`rounded-full bg-white/10 px-10 py-3 font-semibold 
+                  no-underline transition hover:bg-white/20 ${bankAccount ? 'hidden' : ''}`}
+              >
+              Dont have bank account yet? Create new one!
+              </Link>
+
+              <div className={`${bankAccount ? '' : 'hidden'} flex flex-col gap-4`}>
+                <div className="card p-4 bg-slate-100 text-black">
+                  <div className="flex justify-between items-center gap-2">
+                  <span className="font-bold">Your Bank Account</span>
+                  <Link href="/bankaccount" className="btn btn-secondary text-white">
+                  Adjust Balance to your account
+                  </Link>
+                  </div>  
+                   
+                    <span>Balance : {bankAccount?.amount}</span>
+                </div>
+
+              <div className={`card p-4 bg-slate-100 text-black ${bankAccount ? '' : 'hidden'} flex flex-col items-center`}>
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-bold">Your Latest Transaction </span>
+                  <Link href="/transactions" className="btn btn-primary text-white">Add Transaction</Link>
+                </div>
+                  <div className={`${transactions ? '' : 'hidden'}`}>
+                    {/* {latestTransaction ? `${latestTransaction.title} :  ${latestTransaction.amount}` : 'No Transaction Found yet'}  */}
+
+                    <div>
+                     {transactions?.map((transaction) =>(
+                      <div className="bg-slate-500 mt-4 rounded-full text-white p-4" key={transaction.id}>{transaction.title} :{transaction.amount}</div>
+                     ))}
+                    </div>
+                  </div>
+              </div>
+              </div>
+            
+
               <Link
                 href={session ? "/api/auth/signout" : "/api/auth/signin"}
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
@@ -58,10 +71,7 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-
-          {session?.user && <LatestPost />}
         </div>
-      </main>
     </HydrateClient>
   );
 }

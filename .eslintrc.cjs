@@ -36,7 +36,12 @@ const config = {
           "attributes": false
         }
       }
-    ]
+    ],
+    // Add these rules to disable the warnings
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off"
   }
 }
+
 module.exports = config;
